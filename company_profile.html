@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+	<head>
+		<title>Company Profile</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+<body>
+<h4 style='color:red'>App Step 13: join-folder</h4>
+<p><a href="home.html">Kembali ke Menu</a></p>
+<h1 id="modul"></h1>
+<h2 id="metode"></h2>
+<h4 id="msg"></h4>
+<div id="btn"></div>
+<div id="app"></div>
+
+<script src="function.js"></script>
+<script src="image.js"></script>
+<script>
+	// step 10: company
+	// step 10.1:
+	var login_blok=sessionStorage.getItem("login_blok"); 
+	var modul=document.getElementById('modul');
+	var metode=document.getElementById('metode');
+	var msg=document.getElementById('msg');
+	var btn=document.getElementById('btn');
+	var url=global_url+'company/';
+	var html;
+	var page;
+	
+	// step 10.2:
+	function loginRead(){
+		msg.innerHTML='';
+		app.innerHTML='Please wait...';
+		let obj= {"login_blok":login_blok};		
+		loadXHR(global_url+"login/read.php",obj,loginMessage);
+	}
+
+	// step 10.3:
+	function loginMessage(paket){
+		if (paket.err===0){
+			readData();
+		}
+		else{
+			sessionStorage.removeItem('login_blok');
+			window.location.href="login.html";
+		}
+	}
+
+	// step 10.4:
+	function readData(){
+		modul.innerHTML='Company Information';
+		metode.innerHTML='Read Data';
+		btn.style.display='none';
+		let obj={"login_blok":login_blok};
+		loadXHR(url+"read_open.php",obj,readShow);		
+	}
+	
+	// step 10.5:
+	function readShow(ironman){
+		if (ironman.err==0) {
+			html='<ul>'
+				+'<li><label>Company Name</label>: '+ironman.data[0].company_name+'</li>'
+				+'<li><label>Address</label>: '+ironman.data[0].company_address+'</li>'
+				+'<li><label>Telephone</label>: '+ironman.data[0].company_telephone+'</li>'
+				+'<li><label>Fax</label>: '+ironman.data[0].company_fax+'</li>'
+				+'<li><label>Email</label>: '+ironman.data[0].company_email+'</li>'
+				+'<li><label>Start Date</label>: '+tglInaFull(ironman.data[0].company_sdate)+'</li>'
+				+'<li><p><img id="folder_image" width="200" height="200"/ src='+global_url_image+"/uploads/no_image.jpg"+'></p>'
+				+'<input type="text" id="name_image" value="no_image.jpg" disabled class="b-text" hidden>' 
+				+'</li>'
+				+'</ul>';				
+			app.innerHTML = html;
+			document.getElementById("folder_image").src = global_url_image+"uploads/"+ironman.data[0].company_logo;
+			document.getElementById("name_image").value = ironman.data[0].company_logo;
+
+		}else{
+			msg.innerHTML=ironman.msg;
+		}
+	}
+	
+	// step 10.6:
+	loginRead();
+</script>
+</body>
+</html>

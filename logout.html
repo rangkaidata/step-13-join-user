@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+	<head>
+		<title>Join Folder</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+<body>
+<h4 style='color:red'>App Step 13: join-folder</h4>
+<p><a href="home.html">Kembali ke Menu</a></p>
+<h1 id="modul"></h1>
+<h2 id="metode"></h2>
+<h4 id="msg"></h4>
+<div id="btn"></div>
+<div id="app"></div>
+<script src="function.js"></script>
+<script>
+	// step 3: logout
+	// step 3-1:
+	var login_blok=sessionStorage.getItem('login_blok');
+	var btn=document.getElementById('btn');
+	var msg=document.getElementById('msg');
+	var app=document.getElementById('app');
+	var modul=document.getElementById('modul');
+	var metode=document.getElementById('metode');
+
+	// step 3-2:
+	function loginRead(){
+		app.innerHTML='Please wait ...';
+		var obj={"login_blok":login_blok}
+		loadXHR(global_url+'login/read.php',obj,loginMessage);
+	}
+	
+	// step 3-3:
+	function loginMessage(paket){
+		var html;
+		if (paket.err===0){
+			if (paket.data[0].login_blok_master!=''){
+				login_blok_master=paket.data[0].login_blok_master;
+				html='<button onclick="switchCreate();">Switch to my home</button>';
+				modul.innerHTML='Switch Home';
+				metode.innerHTML='Klik tombol switch to my home,<br>untuk kembali ke folder pribadi.';
+			}
+			else{
+				html='<button onclick="logoutCreate();">Log out</button>';
+				modul.innerHTML='Logout';
+				metode.innerHTML='Klik tombol logout untuk keluar';
+			}
+			btn.innerHTML=html;
+			
+			html='<h2>User Login</h2>'
+				+'<ul>'
+				+'<li><label>Login Blok (ID)</label>: '+login_blok+'</li>'
+				+'<li><label>User Blok (ID)</label>: '+paket.data[0].user_blok+'</li>'
+				+'<li><label>User Name</label>: '+paket.data[0].user_name+'</li>'
+				+'<li><label>Full Name</label>: '+paket.data[0].user_fullname+'</li>'
+				+'<li><h2>Company</h2></li>'
+				+'<li><label>Company Name</label>: '+paket.data[0].company_name+'</li>'
+				+'<li><label>Owner/Home</label>: '+paket.data[0].admin_name+'</li>'
+				+'</ul>';
+			app.innerHTML=html;
+
+		}
+		else{
+			sessionStorage.removeItem('login_blok');
+			window.location.href="login.html";
+		}
+	}
+
+	// step 3-4:
+	function logoutCreate(){
+		msg.innerHTML='Please wait ...';
+		var obj={"login_blok":login_blok}
+		loadXHR(global_url+'logout/create.php',obj,logoutMessage);
+	}
+	
+	// step 3-5:
+	function logoutMessage(paket){
+		if (paket.err===0){
+			sessionStorage.removeItem('login_blok');
+			window.location.href="login.html";
+		}
+		else{
+			msg.innerHTML=paket.msg;
+		}
+	}
+	
+	// step 3-6:
+	function switchCreate(){
+		msg.innerHTML='Please wait ...';
+		sessionStorage.setItem("login_blok",login_blok_master);
+		var obj={"login_blok":login_blok}
+		loadXHR(global_url+'logout/create.php',obj,switchMessage);
+	}
+	
+	// step 3-7:
+	function switchMessage(paket){
+		if (paket.err == 0){
+			// reloadPage('company');
+			location.reload(); //kembali ke master	
+		}
+		else{
+			msg.innerHTML = paket.msg;	
+		}
+	}
+
+	// step 3-8
+	loginRead();
+</script>
+</body>
+</html>

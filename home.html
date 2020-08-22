@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<link rel="stylesheet" type="text/css" href="style.css">
+		<title>Home Menu</title>
+	</head>
+<body>
+<h4 style='color:red'>App Step 13: join-folder</h4>
+<h1>Home menu</h1>
+<div id="menu"></div>
+<div id="sub_menu" style="display:none;"></div>
+<h4 id="msg"></h4>
+
+<script src="function.js"></script>
+<script>
+	// step 4: home menu
+	// step 4.1:
+	var login_blok=sessionStorage.getItem('login_blok');
+	var menu=document.getElementById('menu');
+	var sub_menu=document.getElementById('sub_menu');
+	var list_menu;
+	var login_blok_master;
+	var user_name;
+	
+	// step 4.2:
+	function loginRead(){
+		var obj={"login_blok":login_blok}
+		loadXHR(global_url+'login/read.php',obj,loginMessage);
+	}
+	
+	// step 4.3:
+	function loginMessage(paket){
+		var html;
+		if (paket.err===0){
+			user_name=paket.data[0].user_name;
+			if (paket.data[0].login_blok_master!=''){
+				login_blok_master=paket.data[0].login_blok_master;
+			}
+			readData();
+		}
+		else{
+			sessionStorage.removeItem('login_blok');
+			window.location.href="login.html";
+		}
+	}
+	
+	// step 4.4:
+	function readData(){
+		msg.innerHTML='Please wait ...';
+		var obj = {"login_blok":login_blok};
+		loadXHR(global_url+'menu/read.php',obj,readShow); 
+	}
+	
+	// step 4.5:
+	function readShow(paket){
+		list_menu=paket;
+		msg.innerHTML='';
+		var html='';
+		var x;
+		if (paket.err==0){
+			var sudah;
+			for (x in paket.data){
+				if (sudah!=paket.data[x].menu_code){
+					if (paket.data[x].menu_parent=='home'){
+						if (paket.data[x].company_blok!=''){
+							if (paket.data[x].menu_code=='folder'){
+								html+='<button type="button" id="folder" onclick="subMenuShow(\'company\')">'+paket.data[x].company_name+'</button>';
+							}
+							else{
+								html+='<button type="button" onclick="subMenuShow(\''+paket.data[x].menu_code+'\')">'+paket.data[x].menu_name+'</button>';
+							}
+						}
+						else{
+							html+='<button type="button" onclick="subMenuShow(\''+paket.data[x].menu_code+'\')">'+paket.data[x].menu_name+'</button>';
+						}
+					}
+				}				
+				sudah=paket.data[x].menu_code;
+			}
+			
+			if (paket.data[x].company_blok!=''){
+				if (login_blok_master===undefined){
+					html+='<button type="button" onclick="closeFolder()">Close Folder</button>';
+				}
+			}
+
+
+		}
+		else{
+			msg.innerHTML=paket.msg;
+		}
+		// tambah tombol logout
+		html+='<button type="button" onclick="load_modul(\'logout\')">'+user_name+'</button>';
+		menu.innerHTML = html;	
+	}
+	
+	// step 4.6:
+	function subMenuShow(menu_code){
+		var x;
+		var sudah;
+		var tipe;
+		var html;
+		html='<button onclick="subMenuClose();">Close</button>'
+		for (x in list_menu.data){
+			if (list_menu.data[x].menu_parent==menu_code){
+				if (sudah!=list_menu.data[x].menu_group){
+					html+='<h2>'+list_menu.data[x].menu_group+'</h2>';
+				}
+				if (tipe!=list_menu.data[x].menu_type){
+					html+='<h3>'+list_menu.data[x].menu_type+'</h3>&nbsp;&nbsp;';
+				}else{
+					/* --- i'm nothing --- */
+				}
+				html+='<button onclick="load_modul(\''+list_menu.data[x].menu_code+'\')">'+list_menu.data[x].menu_name+'</button>';
+				sudah=list_menu.data[x].menu_group;
+				tipe=list_menu.data[x].menu_type;
+			}
+		}
+		
+		sub_menu.innerHTML = html;	
+		sub_menu.style.display='block';
+	}
+	
+	// step 4.7:
+	function subMenuClose(){
+		sub_menu.style.display='none';
+	}
+	
+	// step 4.8:
+	function load_modul(modul){
+		window.location.href=modul+".html";
+	}
+	
+	// step 4.9:
+	function closeFolder(){
+		const obj={"login_blok":login_blok};
+		loadXHR(global_url+"company/close.php",obj,closeShow); 		
+	}
+	
+	// step 4.10:
+	function closeShow(paket){
+		if (paket.err==0) {
+			load_modul('company');
+		}else{
+			msg.innerHTML=paket.msg;	
+		}	
+	}		
+
+	// step 4.11:
+	loginRead();
+</script>
+</body>
+</html> 

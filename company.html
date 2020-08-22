@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+	<head>
+		<title>Company</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+<body>
+<h4 style='color:red'>App Step 13: join-folder</h4>
+<p><a href="home.html">Kembali ke Menu</a></p>
+<h1 id="modul"></h1>
+<h2 id="metode"></h2>
+<h4 id="msg"></h4>
+<div id="btn"></div>
+<div id="app"></div>
+
+<script src="function.js"></script>
+<script src="image.js"></script>
+<script>
+	// step 9: company
+	// step 9.1:
+	var login_blok=sessionStorage.getItem("login_blok"); 
+	var modul=document.getElementById('modul');
+	var metode=document.getElementById('metode');
+	var msg=document.getElementById('msg');
+	var btn=document.getElementById('btn');
+	var url=global_url+'company/';
+	var html;
+	var page;
+	
+	// step 9.2:
+	function loginRead(){
+		msg.innerHTML='';
+		app.innerHTML='Please wait...';
+		let obj= {"login_blok":login_blok};		
+		loadXHR(global_url+"login/read.php",obj,loginMessage);
+	}
+
+	// step 9.3:
+	function loginMessage(paket){
+		if (paket.err===0){
+			readData();
+		}
+		else{
+			sessionStorage.removeItem('login_blok');
+			window.location.href="login.html";
+		}
+	}
+	
+	// step 9.4:
+	function readData(){
+		modul.innerHTML='Company';	
+		metode.innerHTML='Read Data';	
+		msg.innerHTML='Please wait ...';
+		html='<button type="button" id="btn_create" onclick="createData();">Create New</button>'
+			+'<button type="button" id="btn_search" onclick="searchData(\'\');">Search</button>';
+		btn.innerHTML=html;	
+		const obj= {"login_blok":login_blok};
+		if (page==null){
+			loadXHR(url+"read_paging.php",obj,readShow);
+		}
+		else{
+			loadXHR(page,obj,readShow);
+		}
+	}
+	
+	// step 9.5:
+	function readShow(paket){
+		var x;
+		msg.innerHTML='';
+		html ='<p>Total: '+paket.count+' rows</p>'
+		if (paket.err===0){
+			if (metode.innerHTML=="Read Data"){
+				if (paket.paging.first!=""){
+					html+= '<button type="button" onclick="gotoPage(\''+paket.paging.first+'\')">First</button>';
+				}
+				for (x in paket.paging.pages) {			
+					if (paket.paging.pages[x].current_page=="yes"){
+						html+= '<button type="button" onclick="gotoPage(\''+paket.paging.pages[x].url+'\')" disabled >'+paket.paging.pages[x].page +'</button>';	
+					} else {
+						html+= '<button type="button" onclick="gotoPage(\''+paket.paging.pages[x].url+'\')">'+paket.paging.pages[x].page+'</button>';	
+					}
+				}
+				if (paket.paging.last!=""){
+					html+='<button type="button" onclick="gotoPage(\''+paket.paging.last+'\')">Last</button>';
+				}
+			}
+		}
+		
+		html+='<table border=1>'
+			+'<th style="display:none">Blok</th>'
+			+'<th>No.</th>'
+			+'<th>Image</th>'
+			+'<th>Company Name</th>'
+			+'<th>Address</th>'
+			+'<th>Start Date</th>'
+			+'<th>User Name</th>'
+			+'<th>Date Created</th>'
+			+'<th colspan=3>Action</th>';
+
+		if (paket.err===0){
+			for (x in paket.data) {
+				html+='<tr>'
+					+'<td>'+paket.data[x].nomer+'</td>'
+					+'<td><img style="height:60px;width:60px;" src='+global_url_image+'uploads/'+paket.data[x].company_logo+'></td>'
+					+'<td>'+paket.data[x].company_name+'</td>'
+					+'<td>'+paket.data[x].company_address+'</td>'
+					+'<td>'+tglIna2(paket.data[x].company_sdate)+'</td>'
+				
+					+'<td>'+paket.data[x].user_name+'</td>'
+					+'<td>'+tglIna(paket.data[x].date_created)+'</td>'
+					+'<td><input type="button" value="Delete" onclick="deleteData(\''+paket.data[x].company_blok+'\');"></td>'
+					+'<td><input type="button" value="Update" onclick="updateData(\''+paket.data[x].company_blok+'\');"></td>'
+					+'<td><input type="button" value="Open" onclick="openFolder(\''+paket.data[x].company_blok+'\');"></td>'
+					+'</tr>';
+			}
+		}
+		html+='</table>';
+		app.innerHTML=html;
+	}
+	
+	// step 9.6:
+	function formulir(){
+		html='<form autocomplete="off">'
+			+'<span style="display:inline-block;">'
+			+'<ul>'
+			+'<li><label>Company Name</label>: <input type="text" id="company_name"></li>'
+			+'<li><label>Address</label>: <input type="text" id="company_address"></li>'
+			+'<li><label>Telephone</label>: <input type="text" id="company_telephone"></li>'
+			+'<li><label>Fax</label>: <input type="text" id="company_fax"></li>'
+			+'<li><label>Email</label>: <input type="text" id="company_email"></li>'
+			+'<li><label>Start Date</label>: <input type="date" id="company_sdate"></li>'
+			+'</ul>'
+			+'</span>'
+
+			+'<span style="display:inline-block;">'
+			+'<input type="file" name="fileToUpload" id="fileToUpload" accept="image/*" onchange="loadFile(event)">'
+			+'<p><img id="folder_image" width="150" height="150"/ src='+global_url_image+"uploads/no_image.jpg"+'></p>'
+			+'<input type="text" id="name_image" value="no_image.jpg" disabled class="b-text" hidden>' 
+			+'<button type="button" onclick="noImage()">No image</button></p>'
+			+'</span>'
+			+'</form>';
+		app.innerHTML=html;				
+		document.getElementById('company_sdate').value = tglSekarang();
+		document.getElementById('company_name').focus();
+	}
+	
+	// step 9.7:
+	function createData(){
+		metode.innerHTML="Create Data";
+		html='<button type="button" id="btn_back" onclick="readData();">Back</button>'
+			+'<button type="button" id="btn_save" onclick="createExecute();">Save</button>'
+			+'<button type="button" id="btn_new" onclick="createData();" style="display:none;">New</button>'
+		btn.innerHTML=html;
+		msg.innerHTML='';
+		formulir();
+	}
+
+	// step 9.8:
+	function createExecute(){
+		const obj = {
+			"login_blok":login_blok
+			,"company_name":document.getElementById("company_name").value
+			,"company_address":document.getElementById("company_address").value
+			,"company_telephone":document.getElementById("company_telephone").value
+			,"company_fax":document.getElementById("company_fax").value
+			,"company_email":document.getElementById("company_email").value
+			,"company_sdate":document.getElementById("company_sdate").value
+			,"company_logo":document.getElementById("fileToUpload").value
+		};
+		loadXHR(url+"create.php",obj,createMessage); 
+	}
+
+	// step 9.9:
+	function createMessage(paket){
+		if (paket.err===0){
+			document.getElementById("btn_save").style.display="none";
+			document.getElementById("btn_new").style.display="inline";
+			uploadImageChange(paket);
+		}
+		msg.innerHTML=paket.msg;
+	}
+
+	// step 9.10:
+	function readOneData(blok){
+		app.innerHTML=pleaseWait();
+		const obj={
+			"login_blok":login_blok,
+			"company_blok":blok
+		};
+		loadXHR(url+"read_one.php",obj,readOneShow); 	
+	}
+	
+	// step 9.11:
+	function readOneShow(hope){
+		formulir();
+		if (hope.err==0) {
+			document.getElementById('company_name').value=hope.data[0].company_name;
+			document.getElementById('company_address').value=hope.data[0].company_address;
+			document.getElementById('company_telephone').value=hope.data[0].company_telephone;
+			document.getElementById('company_fax').value=hope.data[0].company_fax;
+			document.getElementById('company_email').value=hope.data[0].company_email;
+			document.getElementById('company_sdate').value=hope.data[0].company_sdate;
+			
+			document.getElementById("folder_image").src = global_url_image+"uploads/"+hope.data[0].company_logo;
+			document.getElementById("name_image").value = hope.data[0].company_logo;
+			
+		}else{
+			msg.innerHTML=hope.msg;
+		}
+	}
+	
+	// step 9.12:
+	function deleteData(blok_id){
+		metode.innerHTML="Delete Data";	
+		html='<button type="button" id="btn_back" onclick="readData();">Back</button>'
+			+'<button type="button" id="btn_continue" onclick="deleteExecute(\''+blok_id+'\');">Continue</button>';
+		btn.innerHTML=html;
+		msg.innerHTML='';
+		readOneData(blok_id)
+	}
+
+	// step 9.13:
+	function deleteExecute(blok_id){
+		msg.innerHTML=pleaseWait();
+		var obj = {
+			"login_blok":login_blok,
+			"company_blok":blok_id
+		};			
+		loadXHR(url+"delete.php",obj,deleteMessage); 
+	}
+	
+	// step 9.14:
+	function deleteMessage(groot){
+		if (groot.err==0){
+			document.getElementById("btn_continue").disabled = true;
+		}
+		msg.innerHTML=groot.msg;
+	}
+	
+	// step 9.15:
+	function updateData(blok_id){
+		metode.innerHTML="Update Data";	
+		html='<button type="button" id="btn_back" onclick="readData();">Back</button>'
+			+'<button type="button" id="btn_save" onclick="updateExecute(\''+blok_id+'\');">Save</button>';
+		btn.innerHTML=html;
+		msg.innerHTML='';
+		readOneData(blok_id);
+	}
+	
+	// step 9.16:
+	function updateExecute(blok_id){
+		msg.innerHTML=pleaseWait();
+		const obj = {
+			"login_blok":login_blok
+			,"company_blok":blok_id
+			,"company_name":document.getElementById("company_name").value
+			,"company_address":document.getElementById("company_address").value
+			,"company_telephone":document.getElementById("company_telephone").value
+			,"company_fax":document.getElementById("company_fax").value
+			,"company_email":document.getElementById("company_email").value
+			,"company_logo":document.getElementById("fileToUpload").value
+			,"name_image":document.getElementById("name_image").value
+		};
+		loadXHR(url+"update.php",obj,updateMessage); 		
+	}
+
+	// step 9.17:
+	function updateMessage(groot){
+		if (groot.err==0){
+			document.getElementById("btn_save").disabled=true;
+			uploadImageChange(groot);
+		}
+		msg.innerHTML=groot.msg;
+	}
+	
+	// step 9.18:
+	function searchData(txt){
+		metode.innerHTML='Search Data';
+		msg.innerHTML='';
+		
+		html='<button type="button" id="btn_back" onclick="readData();">Back</button>';
+		btn.innerHTML=html;
+		
+		html='<input type="text" value="'+txt+'" id="txt_search" placeholder="Type text to search ..." onfocus="this.select();">'
+			+'<button type="button" id="btn_search" onclick="searchExecute();">Search Start</button>';
+		app.innerHTML=html;
+		document.getElementById('txt_search').focus();
+	}
+	
+	// step 9.19:
+	function searchExecute(){
+		metode.innerHTML='Search Result';
+		const txt=document.getElementById('txt_search').value;
+		
+		html ='<button type="button" id="btn_back" onclick="searchData(\''+txt+'\');">Back</button>';
+		btn.innerHTML=html;
+
+		const obj={
+			"login_blok":login_blok,
+			"search":txt}
+		loadXHR(url+"search.php",obj,readShow);
+	}
+
+	// step 9.20:
+	function gotoPage(ini){
+		page=ini;
+		readData();
+	}
+	
+	// step 9.21:
+	function openFolder(blok_id){
+		const obj={
+			"login_blok":login_blok,
+			"company_blok":blok_id
+		};
+		loadXHR(url+"open.php",obj,openMessage); 
+	}
+	
+	// step 9.22:
+	function openMessage(paket){
+		//alert(paket.msg);
+		if (paket.err==0) {				
+			// location.reload();
+			window.location.href="home.html";
+		}else{
+			alert(paket.msg);		
+		}
+	}
+
+	// step 9.23:
+	loginRead();
+
+</script>
+</body>
+</html>

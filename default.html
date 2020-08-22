@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html>
+	<head>
+		<title>Default</title>
+		<link rel="stylesheet" href="style.css">
+	</head>
+<body>
+<h4 style='color:red'>App Step 13: join-folder</h4>
+<p><a href="home.html">Kembali ke Menu</a></p>
+<h1 id="modul"></h2>
+<h2 id="metode"></h2>
+<h4 id="msg"></h4>
+<div id="btn"></div>
+<div id="app"></div>
+
+<script src="function.js"></script>
+<script>
+	// step 8: default
+	// step 8.1: deklarasi variable
+	var login_blok=sessionStorage.getItem("login_blok"); 
+	var modul=document.getElementById('modul');
+	var metode=document.getElementById('metode');
+	var msg=document.getElementById('msg');
+	var btn=document.getElementById('btn');
+	var url=global_url+'default/';
+	var html;
+	var page;
+	
+	// step 8.2:
+	function loginRead(){
+		modul.innerHTML="Default";
+		metode.innerHTML="Update Data";
+		msg.innerHTML='';
+		app.innerHTML=pleaseWait();
+		let obj= {"login_blok":login_blok};		
+		loadXHR(global_url+"login/read.php",obj,loginMessage);
+	}
+
+	// step 8.3:
+	function loginMessage(paket){
+		if (paket.err===0){
+			readData();
+		}
+		else{
+			sessionStorage.removeItem('login_blok');
+			window.location.href="login.html";
+		}
+	}
+	
+	// step 8.4:
+	function readData(){
+		html='<button type="button" id="btn_save" onclick="updateExecute();">Update</button>';
+		btn.innerHTML=html;	
+
+		var obj= {"login_blok":login_blok};		
+		loadXHR(url+"read.php",obj,readShow);
+	}
+	
+	// step 8.5:
+	function readShow(paket){
+		formulir();
+		if (paket.err===0){
+			document.getElementById("default_row").value = paket.data[0].default_row;
+		}
+		else{
+			msg.innerHTML = paket.msg;
+		}
+	}
+
+	// step 8.6:
+	function formulir(){
+		var html;
+		html='<ul>'
+			+'<li><label>Row per page</label>: '
+			+'<input type ="text" id="default_row" value=10 onfocus="this.select();"></li>'
+			+'</ul>';
+		app.innerHTML=html;
+		document.getElementById('default_row').focus();
+	}
+	// step 8.7:
+	function updateExecute(){
+		msg.innerHTML=pleaseWait();
+		var obj = {
+			"login_blok":login_blok,
+			"default_row":document.getElementById("default_row").value
+		};
+
+		loadXHR(url+"update.php",obj,updateMessage); 
+	}
+	
+	// step 8.8:
+	function updateMessage(paket){
+		msg.innerHTML=paket.msg;
+		if (paket.err===0){
+			document.getElementById("btn_save").disabled=true;
+		}		
+	}
+
+	// step 8.9
+	loginRead();
+</script>	
+</body>
+</html>
